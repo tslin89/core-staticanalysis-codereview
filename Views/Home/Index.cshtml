@@ -1,0 +1,92 @@
+﻿@model string
+@{
+    ViewData["Title"] = "NET Core Static Analysis Code Review Tool";
+}
+
+<h1>.NET Core Static Analysis Code Review Tool</h1>
+<p>Enter your .NET Core code below to get a review.</p>
+
+
+<form id="reviewForm" method="post">
+    <div class="form-group">
+        <label for="codeInput">Your Code:</label>
+        <textarea class="form-control" id="codeInput" name="code" rows="10" placeholder="Paste your C# code here..."></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2" id="submitButton">Review Code</button>
+    <button type="button" class="btn btn-secondary mt-2" id="clearButton">Clear</button>
+</form>
+
+<div id="reviewResults" class="mt-4" style="display: none;">
+    <h3>Review Results:</h3>
+    <pre id="reviewOutput" class="border p-3"></pre>
+</div>
+
+@section Scripts {
+    <script>
+        // Initialize CodeMirror for the input textarea
+        var inputEditor = CodeMirror.fromTextArea(document.getElementById("codeInput"), {
+            mode: "text/x-csharp",
+            theme: "monokai",
+            lineNumbers: true,
+            tabSize: 4,
+            indentWithTabs: false,
+            matchBrackets: true
+        });
+
+        // Handle form submission with AJAX
+        $("#reviewForm").on("submit", function (e) {
+
+            console.log('helo world')
+            e.preventDefault(); // Prevent full page reload
+
+            var code = inputEditor.getValue();
+            var submitButton = $("#submitButton");
+
+            // Disable button and show loading state
+            submitButton.prop("disabled", true).html("Reviewing... <span class='spinner-border spinner-border-sm'></span>");
+
+            $.ajax({
+                url: "@Url.Action("ReviewCode", "Home")",
+                type: "POST",
+                data: { code: code },
+                cache: false, // Prevent caching
+                success: function (result) {
+debugger;
+                    console.log("Success - Result received: ", result); // Debug log
+
+                    // Show the results div
+                    $("#reviewResults").show();
+
+                    // Clear the output area
+                    $("#reviewOutput").empty();
+
+                    // Reinitialize CodeMirror with the new result
+                    var outputEditor = CodeMirror(document.getElementById("reviewOutput"), {
+                        value: result,
+                        mode: "text/plain",
+                        theme: "monokai",
+                        lineNumbers: true,
+                        readOnly: true
+                    });
+                    outputEditor.refresh(); // Ensure the editor redraws
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error: ", xhr.responseText); // Debug log
+                    $("#reviewResults").show();
+                    $("#reviewOutput").empty();
+                    var outputEditor = CodeMirror(document.getElementById("reviewOutput"), {
+                        value: "Error: " + xhr.responseText,
+                        mode: "text/plain",
+                        theme: "monokai",
+                        lineNumbers: true,
+                        readOnly: true
+                    });
+                    outputEditor.refresh();
+                },
+                complete: function () {
+                    submitButton.prop("disabled", false).html("Review Code");
+                }
+            });
+        });
+    </script>
+}
