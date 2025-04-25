@@ -29,48 +29,51 @@ public class HomeController : Controller
         public string Code { get; set; }
     }
 
+    public enum ErrorTypeEnum
+    {
+        Message = 0,
+        Warning = 1,
+        Error = 2
+    }
 
     public class ReviewResult
     {
         public int Line { get; set; }
         public string Message { get; set; }
 
-        public int Severity { get; set; }
+        public int ErrorType { get; set; }
 
-        public string HelpText { get; set; }
+        public string HelpURL { get; set; }
     }
 
-    [HttpPost]
-    public List<ReviewResult> ReviewCode([FromBody] InputParam model)
+
+
+    private List<ReviewResult> GetCodeReviewResult(string code)
     {
         List<ReviewResult> result = new List<ReviewResult>();
-
-        
-        string? code = model?.Code;
-
-        // if (string.IsNullOrEmpty(code))
-        // {
-        //     return Content("Error: Please provide some code to review.", "text/plain");
-        // }
-
         try
         {
             SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
             var root = tree.GetRoot();
-            //StringBuilder review = new StringBuilder();
 
             // Rule 1: Syntax Errors
             var diagnostics = tree.GetDiagnostics();
             foreach (var diagnostic in diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
             {
                 var line = diagnostic.Location.GetLineSpan().StartLinePosition.Line + 1;
-                //review.AppendLine($"Line {line}: Syntax error - {diagnostic.GetMessage()}");
-                result.Add(new ReviewResult { Line = line, Message = $"Syntax error - {diagnostic.GetMessage()}" });
+                result.Add(new ReviewResult
+                {
+                    Line = line,
+                    Message = $"Syntax error - {diagnostic.GetMessage()}",
+                    ErrorType = (int)ErrorTypeEnum.Error,
+                    HelpURL = "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/"
+                });
             }
 
-            // if (diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
-            //     return Content(review.ToString(), "text/plain");
-
+            if (diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error) && result.Count() > 0)
+            {
+                return result;
+            }
             var compilation = CSharpCompilation.Create("ReviewCompilation")
                 .AddSyntaxTrees(tree)
                 .AddReferences(
@@ -88,8 +91,13 @@ public class HomeController : Controller
             foreach (var field in publicFields)
             {
                 var line = field.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                //review.AppendLine($"Line {line}: Public field '{field.Declaration.Variables.First().Identifier}' should be a property.");
-                result.Add(new ReviewResult { Line = line, Message = $"Public field '{field.Declaration.Variables.First().Identifier}' should be a property." });
+                result.Add(new ReviewResult
+                {
+                    Line = line,
+                    Message = $"Public field '{field.Declaration.Variables.First().Identifier}' should be a property.",
+                    ErrorType = (int)ErrorTypeEnum.Warning,
+                    HelpURL = "https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/field"
+                });
             }
 
             // Rule 3: Long Methods
@@ -100,24 +108,44 @@ public class HomeController : Controller
                 if (lineCount > 50)
                 {
                     var line = method.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                    //review.AppendLine($"Line {line}: Method '{method.Identifier}' is too long ({lineCount} lines). Consider splitting.");
-                    result.Add(new ReviewResult { Line = line, Message = $"Method '{method.Identifier}' is too long ({lineCount} lines). Consider splitting." });
+                    result.Add(new ReviewResult
+                    {
+                        Line = line,
+                        Message = $"Method '{method.Identifier}' is too long ({lineCount} lines). Consider splitting.",
+                        ErrorType = (int)ErrorTypeEnum.Warning,
+                        HelpURL = "https://learn.microsoft.com/en-us/visualstudio/code-quality/ca1502"
+                    });
                 }
             }
 
-            // Rule 4: Unused Variables
+            // Fixed Rule 4: Unused Variables with block-scoped analysis
             var variables = root.DescendantNodes().OfType<VariableDeclaratorSyntax>();
             foreach (var variable in variables)
             {
                 var symbol = semanticModel.GetDeclaredSymbol(variable);
-                var references = symbol.DeclaringSyntaxReferences;
-                if (references.Length == 1)
+                if (symbol == null) continue;
+
+                var references = root.DescendantNodes()
+                    .OfType<IdentifierNameSyntax>()
+                    .Select(id => new { id, resolved = semanticModel.GetSymbolInfo(id).Symbol })
+                    .Where(pair => pair.resolved != null &&
+                                   SymbolEqualityComparer.Default.Equals(pair.resolved, symbol))
+                    .Select(pair => pair.id)
+                    .Where(id => id.GetLocation().SourceSpan.Start != variable.Identifier.SpanStart); // Exclude self
+
+                if (!references.Any())
                 {
                     var line = variable.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                    //review.AppendLine($"Line {line}: Variable '{variable.Identifier}' is unused.");
-                    result.Add(new ReviewResult { Line = line, Message = $"Variable '{variable.Identifier}' is unused." });
+                    result.Add(new ReviewResult
+                    {
+                        Line = line,
+                        Message = $"Variable '{variable.Identifier}' is unused.",
+                        ErrorType = (int)ErrorTypeEnum.Warning,
+                        HelpURL = "https://learn.microsoft.com/en-us/visualstudio/ide/reference/unused-values-parameters?view=vs-2022"
+                    });
                 }
             }
+
 
             // Rule 5: Unreachable Code and Null Dereferences
             foreach (var method in methods)
@@ -131,8 +159,13 @@ public class HomeController : Controller
                         if (afterReturn)
                         {
                             var line = statement.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                            //review.AppendLine($"Line {line}: Unreachable code after return.");
-                            result.Add(new ReviewResult { Line = line, Message = $"Unreachable code after return." });
+                            result.Add(new ReviewResult
+                            {
+                                Line = line,
+                                Message = $"Unreachable code after return.",
+                                ErrorType = (int)ErrorTypeEnum.Warning,
+                                HelpURL = "https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0162"
+                            });
 
                         }
                         if (statement is ReturnStatementSyntax)
@@ -148,8 +181,13 @@ public class HomeController : Controller
                                 if (decl != null && decl.Initializer == null)
                                 {
                                     var line = id.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                                    //review.AppendLine($"Line {line}: Potential null dereference on '{id.Identifier}'.");
-                                    result.Add(new ReviewResult { Line = line, Message = $"Potential null dereference on '{id.Identifier}'." });
+                                    result.Add(new ReviewResult
+                                    {
+                                        Line = line,
+                                        Message = $"Potential null dereference on '{id.Identifier}'.",
+                                        ErrorType = (int)ErrorTypeEnum.Warning,
+                                        HelpURL = "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs0162"
+                                    });
 
                                 }
                             }
@@ -164,8 +202,13 @@ public class HomeController : Controller
                 if (!method.DescendantNodes().OfType<AwaitExpressionSyntax>().Any())
                 {
                     var line = method.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                    //review.AppendLine($"Line {line}: Async method '{method.Identifier}' lacks 'await'. Consider removing 'async' or adding 'await'.");
-                    result.Add(new ReviewResult { Line = line, Message = $"Async method '{method.Identifier}' lacks 'await'. Consider removing 'async' or adding 'await'." });
+                    result.Add(new ReviewResult
+                    {
+                        Line = line,
+                        Message = $"Async method '{method.Identifier}' lacks 'await'. Consider removing 'async' or adding 'await'.",
+                        ErrorType = (int)ErrorTypeEnum.Error,
+                        HelpURL = "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/"
+                    });
 
                 }
             }
@@ -181,30 +224,18 @@ public class HomeController : Controller
                 if (containingBlock != null && !containingBlock.DescendantNodes().OfType<UsingStatementSyntax>().Any(u => u.DescendantNodes().Contains(disposable)))
                 {
                     var line = disposable.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                    //review.AppendLine($"Line {line}: Disposable resource '{symbol.Name}' should be wrapped in a 'using' statement.");
-                    result.Add(new ReviewResult { Line = line, Message = $"Disposable resource '{symbol.Name}' should be wrapped in a 'using' statement." });
-
-                }
-            }
-
-            // Rule 8: Controller Action Issues
-            var controllers = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
-                .Where(c => semanticModel.GetDeclaredSymbol(c).BaseType?.Name.Contains("Controller") == true);
-            foreach (var controller in controllers)
-            {
-                var actions = controller.DescendantNodes().OfType<MethodDeclarationSyntax>();
-                foreach (var action in actions)
-                {
-                    if (!action.Modifiers.Any(SyntaxKind.PublicKeyword))
+                    result.Add(new ReviewResult
                     {
-                        var line = action.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                        //review.AppendLine($"Line {line}: Controller action '{action.Identifier}' should be public.");
-                        result.Add(new ReviewResult { Line = line, Message = $"Controller action '{action.Identifier}' should be public." });
-                    }
+                        Line = line,
+                        Message = $"Disposable resource '{symbol.Name}' should be wrapped in a 'using' statement.",
+                        ErrorType = (int)ErrorTypeEnum.Warning,
+                        HelpURL = "https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose"
+                    });
+
                 }
             }
 
-            // Rule 9: Static HttpClient Usage
+            // Rule 8: Static HttpClient Usage
             var httpClients = root.DescendantNodes().OfType<VariableDeclaratorSyntax>()
                 .Where(v => v.Initializer != null &&
                             semanticModel.GetTypeInfo(v.Initializer.Value).Type?.Name == "HttpClient" &&
@@ -212,11 +243,19 @@ public class HomeController : Controller
             foreach (var httpClient in httpClients)
             {
                 var line = httpClient.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                //review.AppendLine($"Line {line}: HttpClient '{httpClient.Identifier}' should be static or managed as a singleton to avoid socket exhaustion.");
-                result.Add(new ReviewResult { Line = line, Message = $"HttpClient '{httpClient.Identifier}' should be static or managed as a singleton to avoid socket exhaustion." });
+                result.Add(new ReviewResult
+                {
+                    Line = line,
+                    Message = $"HttpClient '{httpClient.Identifier}' should be static or managed as a singleton to avoid socket exhaustion.",
+                    ErrorType = (int)ErrorTypeEnum.Warning,
+                    HelpURL = "https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/httpclient-guidelines"
+                });
             }
 
-            // Rule 10: Missing [ApiController] Attribute
+            var controllers = root.DescendantNodes().OfType<ClassDeclarationSyntax>()
+                .Where(c => semanticModel.GetDeclaredSymbol(c).BaseType?.Name.Contains("Controller") == true);
+
+            // Rule 9: Missing [ApiController] Attribute
             foreach (var controller in controllers)
             {
                 var symbol = semanticModel.GetDeclaredSymbol(controller);
@@ -224,12 +263,17 @@ public class HomeController : Controller
                 if (!attributes.Any(a => a.AttributeClass?.Name == "ApiControllerAttribute"))
                 {
                     var line = controller.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                    //review.AppendLine($"Line {line}: Controller '{controller.Identifier}' is missing [ApiController] attribute, recommended for .NET Core APIs.");
-                    result.Add(new ReviewResult { Line = line, Message = $"Controller '{controller.Identifier}' is missing [ApiController] attribute, recommended for .NET Core APIs." });
+                    result.Add(new ReviewResult
+                    {
+                        Line = line,
+                        Message = $"Controller '{controller.Identifier}' is missing [ApiController] attribute, recommended for .NET Core APIs.",
+                        ErrorType = (int)ErrorTypeEnum.Warning,
+                        HelpURL = "https://learn.microsoft.com/en-us/aspnet/core/web-api/?view=aspnetcore-8.0#apicontroller-attribute"
+                    });
                 }
             }
 
-            // Rule 11: Action Methods Without HTTP Attributes
+            // Rule 10: Action Methods Without HTTP Attributes
             foreach (var controller in controllers)
             {
                 var actions = controller.DescendantNodes().OfType<MethodDeclarationSyntax>()
@@ -241,14 +285,19 @@ public class HomeController : Controller
                     if (!attributes.Any(a => a.AttributeClass?.Name.Contains("Http") == true))
                     {
                         var line = action.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                        //review.AppendLine($"Line {line}: Action '{action.Identifier}' lacks an HTTP attribute (e.g., [HttpGet]).");
-                        result.Add(new ReviewResult { Line = line, Message = $"Action '{action.Identifier}' lacks an HTTP attribute (e.g., [HttpGet])." });
+                        result.Add(new ReviewResult
+                        {
+                            Line = line,
+                            Message = $"Action '{action.Identifier}' lacks an HTTP attribute (e.g., [HttpGet]).",
+                            ErrorType = (int)ErrorTypeEnum.Warning,
+                            HelpURL = "https://learn.microsoft.com/en-us/aspnet/core/web-api/?view=aspnetcore-8.0#http-verb-attributes"
+                        });
 
                     }
                 }
             }
 
-            // Rule 12: Task Return Without Async
+            // Rule 11: Task Return Without Async
             foreach (var method in methods)
             {
                 var returnType = semanticModel.GetTypeInfo(method.ReturnType).Type;
@@ -256,28 +305,89 @@ public class HomeController : Controller
                     !method.Modifiers.Any(SyntaxKind.AsyncKeyword))
                 {
                     var line = method.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                    //review.AppendLine($"Line {line}: Method '{method.Identifier}' returns Task but is not async. Use async/await or return a completed Task.");
-                    result.Add(new ReviewResult { Line = line, Message = $"returns Task but is not async. Use async/await or return a completed Task." });
-
+                    result.Add(new ReviewResult
+                    {
+                        Line = line,
+                        Message = $"returns Task but is not async. Use async/await or return a completed Task.",
+                        ErrorType = (int)ErrorTypeEnum.Warning,
+                        HelpURL = "https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/#async-methods"
+                    });
                 }
             }
 
-            // if (review.Length == 0)
-            // {
-            //     review.AppendLine("No major issues detected. Code looks good!");
-            // }
+            // Rule 12: Empty Catch Blocks
+            var emptyCatches = root.DescendantNodes().OfType<CatchClauseSyntax>()
+                .Where(c => !c.Block.Statements.Any());
+            foreach (var catchBlock in emptyCatches)
+            {
+                var line = catchBlock.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+                result.Add(new ReviewResult
+                {
+                    Line = line,
+                    Message = "Empty catch block detected. Consider logging or handling the exception.",
+                    ErrorType = (int)ErrorTypeEnum.Warning,
+                    HelpURL = "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/try-catch"
+                });
+            }
 
-            //return Content(review.ToString(), "text/plain");
+            // Rule 13: Deep Nesting (more than 6 levels)
+            var allBlocks = root.DescendantNodes().OfType<BlockSyntax>();
+            foreach (var block in allBlocks)
+            {
+                int depth = 0;
+                SyntaxNode current = block;
+                while ((current = current.Parent) != null)
+                {
+                    if (current is BlockSyntax) depth++;
+                    if (depth > 6)
+                    {
+                        var line = block.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+                        result.Add(new ReviewResult
+                        {
+                            Line = line,
+                            Message = "Code is nested too deeply (more than 6 levels). Consider refactoring.",
+                            ErrorType = (int)ErrorTypeEnum.Warning,
+                            HelpURL = "https://refactoring.guru/smells/deep-nesting"
+                        });
+                        break;
+                    }
+                }
+            }
+
+            // Rule 14: Missing XML Documentation on Public Methods
+            var publicMethods = root.DescendantNodes().OfType<MethodDeclarationSyntax>()
+                .Where(m => m.Modifiers.Any(SyntaxKind.PublicKeyword));
+            foreach (var method in publicMethods)
+            {
+                var trivia = method.GetLeadingTrivia();
+                bool hasDoc = trivia.Any(t => t.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia) ||
+                                              t.IsKind(SyntaxKind.MultiLineDocumentationCommentTrivia));
+                if (!hasDoc)
+                {
+                    var line = method.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+                    result.Add(new ReviewResult
+                    {
+                        Line = line,
+                        Message = $"Public method '{method.Identifier}' lacks XML documentation.",
+                        ErrorType = (int)ErrorTypeEnum.Warning,
+                        HelpURL = "https://learn.microsoft.com/en-us/dotnet/csharp/codedoc"
+                    });
+                }
+            }
 
             return result;
         }
         catch (Exception)
         {
-            //return Content($"Error reviewing code: {ex.Message}", "text/plain");
             throw;
         }
     }
 
+    [HttpPost]
+    public List<ReviewResult> ReviewCode([FromBody] InputParam model)
+    {
+        string? code = model?.Code;
 
-
+        return GetCodeReviewResult(code);
+    }
 }

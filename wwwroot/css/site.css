@@ -1,7 +1,9 @@
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
+  font-family: "Roboto";
 }
 
 .page-container {
@@ -11,10 +13,11 @@ html, body {
   height: 100vh;
 }
 
-header, footer {
+header,
+footer {
   background: #00436d; /*#333;*/
   color: #fff;
-  padding: 1rem;
+  padding: 0.5rem;
   flex-shrink: 0;
 }
 
@@ -22,7 +25,7 @@ main {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  min-height: 0; 
+  min-height: 0;
 }
 
 .panel-main {
@@ -32,7 +35,8 @@ main {
   height: 100%;
 }
 
-.panel-left, .panel-right {
+.panel-left,
+.panel-right {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -53,15 +57,25 @@ main {
   background: #fafafa;
 }
 
-.codeInputWrapper {
+.scrollWrapper {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  margin: 1rem 0;
+  /* margin: 1rem 0; */
+  margin: 0;
+  /* border-top: 2x solid #dcdcdc;
+  border-bottom: 2px solid #dcdcdc; */
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
-#codeInput, .CodeMirror {
+.panel-left .scrollWrapper {
+  border-top: 1px solid #dddddd;
+}
+
+#codeInput,
+.CodeMirror {
   flex: 1 1 auto;
   width: 100%;
   min-height: 0;
@@ -74,14 +88,110 @@ main {
 .left-controls {
   flex-shrink: 0;
   margin-top: 1rem;
+  display: flex;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
 }
 
-/* body, .panel-right{
-  background: black;
+.finding-count {
+  display: inline-block;
+  background: red;
+  text-align: center;
   color: white;
+  font-size: 10px;
+  padding: 3px 5px;
+  margin-left: 10px;
+  position: relative;
+  top: -3px;
+  float: right;
+}
+
+.left-controls .sub-controls {
+  flex: 1;
+  text-align: right;
+}
+
+.issue-link {
+  color: red;
+}
+
+.tblResult,
+.tblResult-Header {
+  /* border: 1px solid red; */
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* line */
+.tblResult-Header th:nth-child(1),
+.tblResult td:nth-child(1) {
+  width: 40px;
+  text-align: right;
+  padding-right: 5px;
+}
+
+/* message */
+.tblResult-Header th:nth-child(2),
+.tblResult td:nth-child(2) {
+  padding-left: 5px;
+}
+
+.tblResult .type-0 {
+  color: black;
+}
+
+.tblResult .type-1 {
+  color: #d87a00;
+}
+
+.tblResult .type-2 {
+  color: red;
+}
+
+/* help */
+/* .tblResult-Header th:nth-child(3),
+.tblResult td:nth-child(3) {
+  width: 60px;
+  text-align: center;
 } */
 
-.issue-link
-{
-  color: red;
+.tblResult-Header th {
+  background: #00436e;
+  color: white;
+  font-size: 12px;
+  padding: 10px 0;
+}
+
+.tblResult td,
+.tblResult-Header th {
+  vertical-align: top;
+  border-collapse: collapse;
+  border: 1px solid #00436e;
+}
+
+.tblResult td {
+  border: none;
+  border-bottom: 1px solid #dfdfdf;
+}
+
+.div-output {
+  flex-shrink: 1;
+  overflow: auto;
+}
+
+/* .jump-line {
+  text-decoration: none;
+} */
+
+.more-info {
+  background-color: #dbdbdb;
+  color: #404040;
+  display: inline-block;
+  text-decoration: none;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 10px;
+  position: relative;
+  top: -2px;
+  cursor: pointer;
 }
