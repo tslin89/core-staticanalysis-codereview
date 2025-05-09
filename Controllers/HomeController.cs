@@ -29,24 +29,52 @@ public class HomeController : Controller
         public string Code { get; set; }
     }
 
+    /// <summary>
+    /// Classification of issue severity in code review results.
+    /// </summary>
     public enum ErrorTypeEnum
     {
+        /// <summary>
+        /// Informational message – general best practices or suggestions.
+        /// </summary>
         Message = 0,
+
+        /// <summary>
+        /// Warning – may impact performance, maintainability, or security.
+        /// </summary>
         Warning = 1,
+
+        /// <summary>
+        /// Error – critical issue that must be addressed.
+        /// </summary>
         Error = 2
     }
 
+    /// <summary>
+    /// Represents a code review finding returned by the static analysis engine.
+    /// </summary>
     public class ReviewResult
     {
+        /// <summary>
+        /// Line number in the source code where the issue was detected.
+        /// </summary>
         public int Line { get; set; }
-        public string Message { get; set; }
 
+        /// <summary>
+        /// Description of the issue or suggestion.
+        /// </summary>
+        public string? Message { get; set; }
+
+        /// <summary>
+        /// Severity level of the issue (Message, Warning, Error).
+        /// </summary>
         public int ErrorType { get; set; }
 
-        public string HelpURL { get; set; }
+        /// <summary>
+        /// Optional help link to documentation or remediation guidance.
+        /// </summary>
+        public string? HelpURL { get; set; }
     }
-
-
 
     private List<ReviewResult> GetCodeReviewResult(string code)
     {
@@ -84,7 +112,7 @@ public class HomeController : Controller
 
             var semanticModel = compilation.GetSemanticModel(tree);
 
-            // Rule 2: Public Fields
+            // Rule: Public Fields
             var publicFields = root.DescendantNodes()
                 .OfType<FieldDeclarationSyntax>()
                 .Where(f => f.Modifiers.Any(SyntaxKind.PublicKeyword));

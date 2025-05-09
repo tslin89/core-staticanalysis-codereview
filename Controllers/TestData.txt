@@ -1,0 +1,611 @@
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace CodeQualityExample
+{
+    public class SampleController : ControllerBase
+    {
+        public void SyntaxErrorMethod()
+        {
+            int a = 10;
+        }
+
+        public string exposedField;
+
+
+
+        public void UnusedVariable()
+        {
+            int unused = 123;
+        }
+
+        public void Unreachable()
+        {
+            return;
+            Console.WriteLine("Can't reach this");
+        }
+
+        public async void AsyncMethodWithoutAwait()
+        {
+            int value = 5;
+        }
+
+        public void DisposableNotUsing()
+        {
+            var client = new HttpClient();
+        }
+
+        private HttpClient httpClient = new HttpClient();
+
+        public IActionResult NoHttpAttribute()
+        {
+            return Ok();
+        }
+
+        public Task<IActionResult> TaskMethod()
+        {
+            return Task.FromResult<IActionResult>(Ok());
+        }
+
+        public void EmptyCatchBlock()
+        {
+            try { var x = 1 / 0; }
+            catch (Exception) { }
+        }
+
+        public void DeeplyNested()
+        {
+            if (true)
+            {
+                if (true)
+                {
+                    if (true)
+                    {
+                        if (true)
+                        {
+                            if (true)
+                            {
+                                if (true)
+                                {
+                                    if (true)
+                                    {
+                                        if (true)
+                                        {
+                                            Console.WriteLine("Deep nest");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void NoXmlDocs()
+        {
+            Console.WriteLine("Missing docs");
+        }
+
+    }
+}
+
+namespace CodeQualityExample.Part2
+{
+    public class ExtraController : ControllerBase
+    {
+        public void AnotherSyntaxError()
+        {
+            string msg = "Missing semicolon";
+        }
+
+        public bool isFlagSet;
+
+        public void AnotherLongMethod()
+        {
+            //             " + 
+            //         Array.from({ length: 60}, (_, i) => `            int calc${ i} = ${ i}
+            //             *2;`).join("
+            // ") + "
+        }
+
+        public void VariableDeclaredNotUsed()
+        {
+            bool unusedBool = false;
+        }
+
+        public IActionResult NoHttpVerb()
+        {
+            return Content("No HTTP attribute");
+        }
+
+        public Task<string> TaskReturningNoAsync()
+        {
+            return Task.FromResult("Done");
+        }
+
+        public async void AsyncButNoAwait()
+        {
+            int process = 99;
+        }
+
+        public void EmptyCatch()
+        {
+            try
+            {
+                var risky = 1 / int.Parse("0");
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        public void UnreachableAfterReturn()
+        {
+            return;
+            Console.WriteLine("Unreachable");
+        }
+
+        public void AnotherDeepNesting()
+        {
+            if (true)
+            {
+                if (true)
+                {
+                    if (true)
+                    {
+                        if (true)
+                        {
+                            if (true)
+                            {
+                                if (true)
+                                {
+                                    if (true)
+                                    {
+                                        if (true)
+                                        {
+                                            Console.WriteLine("Very deep nesting");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void NoDocAgain()
+        {
+            Console.WriteLine("Still no XML docs");
+        }
+
+        // " + 
+        //         Array.from({length: 100}, (_, i) => `        public void MoreDummyMethods${i}() { Console.WriteLine(${i}); }`).join("
+        // ") + "
+    }
+}
+
+namespace TestNamespace2
+{
+    // Rule 9: Missing [ApiController] Attribute
+    public class SampleController : ControllerBase
+    {
+        // Rule 2: Public Fields
+        public int exposedField = 42;
+
+        // Rule 14: Missing XML Documentation
+        public string UndocumentedMethod()
+        {
+            return "No docs";
+        }
+
+        // Rule 10: Action Method Without HTTP Attribute
+        public IActionResult NoHttpVerb()
+        {
+            return Ok("Missing HTTP verb");
+        }
+
+        // Rule 3: Long Method (>50 lines)
+        public void VeryLongMethod()
+        {
+            Console.WriteLine("Start");
+            Console.WriteLine("Line 2");
+            Console.WriteLine("Line 3");
+            Console.WriteLine("Line 4");
+            Console.WriteLine("Line 5");
+            Console.WriteLine("Line 6");
+            Console.WriteLine("Line 7");
+            Console.WriteLine("Line 8");
+            Console.WriteLine("Line 9");
+            Console.WriteLine("Line 10");
+            Console.WriteLine("Line 11");
+            Console.WriteLine("Line 12");
+            Console.WriteLine("Line 13");
+            Console.WriteLine("Line 14");
+            Console.WriteLine("Line 15");
+            Console.WriteLine("Line 16");
+            Console.WriteLine("Line 17");
+            Console.WriteLine("Line 18");
+            Console.WriteLine("Line 19");
+            Console.WriteLine("Line 20");
+            Console.WriteLine("Line 21");
+            Console.WriteLine("Line 22");
+            Console.WriteLine("Line 23");
+            Console.WriteLine("Line 24");
+            Console.WriteLine("Line 25");
+            Console.WriteLine("Line 26");
+            Console.WriteLine("Line 27");
+            Console.WriteLine("Line 28");
+            Console.WriteLine("Line 29");
+            Console.WriteLine("Line 30");
+            Console.WriteLine("Line 31");
+            Console.WriteLine("Line 32");
+            Console.WriteLine("Line 33");
+            Console.WriteLine("Line 34");
+            Console.WriteLine("Line 35");
+            Console.WriteLine("Line 36");
+            Console.WriteLine("Line 37");
+            Console.WriteLine("Line 38");
+            Console.WriteLine("Line 39");
+            Console.WriteLine("Line 40");
+            Console.WriteLine("Line 41");
+            Console.WriteLine("Line 42");
+            Console.WriteLine("Line 43");
+            Console.WriteLine("Line 44");
+            Console.WriteLine("Line 45");
+            Console.WriteLine("Line 46");
+            Console.WriteLine("Line 47");
+            Console.WriteLine("Line 48");
+            Console.WriteLine("Line 49");
+            Console.WriteLine("Line 50");
+            Console.WriteLine("Line 51");
+            Console.WriteLine("Line 52");
+        }
+
+        // Rule 11: Task Return Without Async
+        public Task<string> TaskWithoutAsync()
+        {
+            return Task.FromResult("Not async");
+        }
+    }
+
+    public class ProblematicCode
+    {
+        // Rule 4: Unused Variables
+        public void UnreferencedVariable()
+        {
+            double tempValue = 3.14;
+            Console.WriteLine("No use of tempValue");
+        }
+
+        // Rule 5: Unreachable Code
+        public void DeadCode()
+        {
+            if (true)
+            {
+                return;
+            }
+            Console.WriteLine("Never executes");
+        }
+
+        // Rule 5: Potential Null Dereference
+        public void RiskyNullAccess()
+        {
+            object couldBeNull;
+            Console.WriteLine(couldBeNull.ToString());
+        }
+
+        // Rule 6: Async Method Without Await
+        public async Task NoAwaitAsyncMethod()
+        {
+            Console.WriteLine("Missing await");
+        }
+
+        // Rule 7: Disposable Resource Without Using
+        public void UnmanagedDisposable()
+        {
+            var fileStream = new FileStream("test.txt", FileMode.Create);
+            fileStream.WriteByte(1);
+        }
+
+        // Rule 8: Non-Static HttpClient
+        public void LocalHttpClient()
+        {
+            var httpClient = new HttpClient();
+            httpClient.GetAsync("https://test.com");
+        }
+
+        // Rule 12: Empty Catch Block
+        public void SilentException()
+        {
+            try
+            {
+                int.Parse("invalid");
+            }
+            catch
+            {
+            }
+        }
+
+        // Rule 13: Deep Nesting
+        public void ExcessiveNesting()
+        {
+            if (DateTime.Now.Hour > 0)
+            {
+                if (DateTime.Now.Minute > 0)
+                {
+                    if (DateTime.Now.Second > 0)
+                    {
+                        if (true)
+                        {
+                            if (true)
+                            {
+                                if (true)
+                                {
+                                    if (true)
+                                    {
+                                        Console.WriteLine("Nested too far");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Rule 1: Syntax Error
+    public class BrokenSyntax
+    {
+        public void SyntaxMistake()
+        {
+            var value = 100; // Missing semicolon
+            Console.WriteLine(value);
+        }
+    }
+}
+
+namespace TestNamespace2
+{
+    // Rule 9: Missing [ApiController] Attribute
+    public class SampleController : ControllerBase
+    {
+        // Rule 2: Public Fields
+        public int exposedField = 42;
+
+        // Rule 14: Missing XML Documentation
+        public string UndocumentedMethod()
+        {
+            return "No docs";
+        }
+
+        // Rule 10: Action Method Without HTTP Attribute
+        public IActionResult NoHttpVerb()
+        {
+            return Ok("Missing HTTP verb");
+        }
+
+        // Rule 3: Long Method (>50 lines)
+        public void VeryLongMethod()
+        {
+            Console.WriteLine("Start");
+            Console.WriteLine("Line 2");
+            Console.WriteLine("Line 3");
+            Console.WriteLine("Line 4");
+            Console.WriteLine("Line 5");
+            Console.WriteLine("Line 6");
+            Console.WriteLine("Line 7");
+            Console.WriteLine("Line 8");
+            Console.WriteLine("Line 9");
+            Console.WriteLine("Line 10");
+            Console.WriteLine("Line 11");
+            Console.WriteLine("Line 12");
+            Console.WriteLine("Line 13");
+            Console.WriteLine("Line 14");
+            Console.WriteLine("Line 15");
+            Console.WriteLine("Line 16");
+            Console.WriteLine("Line 17");
+            Console.WriteLine("Line 18");
+            Console.WriteLine("Line 19");
+            Console.WriteLine("Line 20");
+            Console.WriteLine("Line 21");
+            Console.WriteLine("Line 22");
+            Console.WriteLine("Line 23");
+            Console.WriteLine("Line 24");
+            Console.WriteLine("Line 25");
+            Console.WriteLine("Line 26");
+            Console.WriteLine("Line 27");
+            Console.WriteLine("Line 28");
+            Console.WriteLine("Line 29");
+            Console.WriteLine("Line 30");
+            Console.WriteLine("Line 31");
+            Console.WriteLine("Line 32");
+            Console.WriteLine("Line 33");
+            Console.WriteLine("Line 34");
+            Console.WriteLine("Line 35");
+            Console.WriteLine("Line 36");
+            Console.WriteLine("Line 37");
+            Console.WriteLine("Line 38");
+            Console.WriteLine("Line 39");
+            Console.WriteLine("Line 40");
+            Console.WriteLine("Line 41");
+            Console.WriteLine("Line 42");
+            Console.WriteLine("Line 43");
+            Console.WriteLine("Line 44");
+            Console.WriteLine("Line 45");
+            Console.WriteLine("Line 46");
+            Console.WriteLine("Line 47");
+            Console.WriteLine("Line 48");
+            Console.WriteLine("Line 49");
+            Console.WriteLine("Line 50");
+            Console.WriteLine("Line 51");
+            Console.WriteLine("Line 52");
+        }
+
+        // Rule 11: Task Return Without Async
+        public Task<string> TaskWithoutAsync()
+        {
+            return Task.FromResult("Not async");
+        }
+    }
+
+    public class ProblematicCode
+    {
+        // Rule 4: Unused Variables
+        public void UnreferencedVariable()
+        {
+            double tempValue = 3.14;
+            Console.WriteLine("No use of tempValue");
+        }
+
+        // Rule 5: Unreachable Code
+        public void DeadCode()
+        {
+            if (true)
+            {
+                return;
+            }
+            Console.WriteLine("Never executes");
+        }
+
+        // Rule 5: Potential Null Dereference
+        public void RiskyNullAccess()
+        {
+            object couldBeNull;
+            Console.WriteLine(couldBeNull.ToString());
+        }
+
+        // Rule 6: Async Method Without Await
+        public async Task NoAwaitAsyncMethod()
+        {
+            Console.WriteLine("Missing await");
+        }
+
+        
+
+        // Rule 12: Empty Catch Block
+        public void SilentException()
+        {
+            try
+            {
+                int.Parse("invalid");
+            }
+            catch
+            {
+            }
+        }
+
+        // Rule 13: Deep Nesting
+        public void ExcessiveNesting()
+        {
+            if (DateTime.Now.Hour > 0)
+            {
+                if (DateTime.Now.Minute > 0)
+                {
+                    if (DateTime.Now.Second > 0)
+                    {
+                        if (true)
+                        {
+                            if (true)
+                            {
+                                if (true)
+                                {
+                                    if (true)
+                                    {
+                                        Console.WriteLine("Nested too far");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void LongMethod()
+        {
+            int x0 = 0;
+            int x1 = 1;
+            int x2 = 2;
+            int x3 = 3;
+            int x4 = 4;
+            int x5 = 5;
+            int x6 = 6;
+            int x7 = 7;
+            int x8 = 8;
+            int x9 = 9;
+            int x10 = 10;
+            int x11 = 11;
+            int x12 = 12;
+            int x13 = 13;
+            int x14 = 14;
+            int x15 = 15;
+            int x16 = 16;
+            int x17 = 17;
+            int x18 = 18;
+            int x19 = 19;
+            int x20 = 20;
+            int x21 = 21;
+            int x22 = 22;
+            int x23 = 23;
+            int x24 = 24;
+            int x25 = 25;
+            int x26 = 26;
+            int x27 = 27;
+            int x28 = 28;
+            int x29 = 29;
+            int x30 = 30;
+            int x31 = 31;
+            int x32 = 32;
+            int x33 = 33;
+            int x34 = 34;
+            int x35 = 35;
+            int x36 = 36;
+            int x37 = 37;
+            int x38 = 38;
+            int x39 = 39;
+            int x40 = 40;
+            int x41 = 41;
+            int x42 = 42;
+            int x43 = 43;
+            int x44 = 44;
+            int x45 = 45;
+            int x46 = 46;
+            int x47 = 47;
+            int x48 = 48;
+            int x49 = 49;
+            int x50 = 50;
+            int x51 = 51;
+            int x52 = 52;
+            int x53 = 53;
+            int x54 = 54;
+            int x55 = 55;
+            int x56 = 56;
+            int x57 = 57;
+            int x58 = 58;
+            int x59 = 59;
+        }
+    }
+
+    // Rule 1: Syntax Error
+    public class SampelController
+    {
+        // Rule 7: Disposable Resource Without Using
+        public void UnmanagedDisposable()
+        {
+            var fileStream = new FileStream("test.txt", FileMode.Create);
+            fileStream.WriteByte(1);
+        }
+
+        // Rule 8: Non-Static HttpClient
+        public void LocalHttpClient()
+        {
+            var httpClient = new HttpClient();
+            httpClient.GetAsync("https://test.com");
+        }
+    }
+}

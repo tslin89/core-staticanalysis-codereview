@@ -93,17 +93,24 @@ main {
   border-top: 1px solid #eee;
 }
 
-.finding-count {
+.finding-count, .time-taken {
   display: inline-block;
-  background: red;
   text-align: center;
   color: white;
   font-size: 10px;
   padding: 3px 5px;
-  margin-left: 10px;
+  margin-left: 5px;
   position: relative;
   top: -3px;
   float: right;
+}
+
+.finding-count{
+  background: red;
+}
+
+.time-taken{
+  background: blue;
 }
 
 .left-controls .sub-controls {

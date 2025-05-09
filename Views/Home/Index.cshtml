@@ -4,159 +4,214 @@
 }
 
 <div class="panel-main">
-    <div class="panel-left">
-        <section>Enter C# .NET Core Code to Review</section>
-        <div class="scrollWrapper">
-            <textarea id="codeInput"></textarea>
-        </div>
-        <div class="left-controls">
-            <input type="submit" id="submitButton" value="Review Code" class="btn btn-primary" />
+  <div class="panel-left">
+    <section>Enter C# .NET Core Code to Review</section>
+    <div class="scrollWrapper">
+      <textarea id="codeInput"></textarea>
+    </div>
+    <div class="left-controls">
+      <input
+        type="submit"
+        id="submitButton"
+        value="Review Code"
+        class="btn btn-primary"
+      />
 
-            <div class="sub-controls">
-                <input type="button" id="copyButton" value="Copy" class="btn btn-secondary" />
-                <input type="button" id="pasteButton" value="Paste" class="btn btn-secondary" />
-            </div>
-        </div>
+      <div class="sub-controls">
+        <input
+          type="button"
+          id="copyButton"
+          value="Copy"
+          class="btn btn-secondary"
+        />
+        <input
+          type="button"
+          id="pasteButton"
+          value="Paste"
+          class="btn btn-secondary"
+        />
+      </div>
     </div>
-    <div class="panel-right">
-        <section>Code Review Result<span class="finding-count"></span></section>
-        <table class="tblResult-Header">
-                <tr>
-                    <th>Line</th>
-                    <th>Message</th>
-                </tr>
-        </table>
-        <div class="scrollWrapper">
-            <div class="div-output"></div>
-        </div>
+  </div>
+  <div class="panel-right">
+    <section>Code Review Result<span class="finding-count"></span><span class="time-taken"></span></section>
+    <table class="tblResult-Header">
+      <tr>
+        <th>Line</th>
+        <th>Message</th>
+      </tr>
+    </table>
+    <div class="scrollWrapper">
+      <div class="div-output"></div>
     </div>
+  </div>
 </div>
 
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
-    <div id="myToast" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-        <div class="toast-body">
-            Action Completed!
-        </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
+<div
+  class="toast-container position-fixed bottom-0 end-0 p-3"
+  style="z-index: 9999"
+>
+  <div
+    id="myToast"
+    class="toast align-items-center text-bg-primary border-0"
+    role="alert"
+    aria-live="assertive"
+    aria-atomic="true"
+  >
+    <div class="d-flex">
+      <div class="toast-body">Action Completed!</div>
+      <button
+        type="button"
+        class="btn-close btn-close-white me-2 m-auto"
+        data-bs-dismiss="toast"
+        aria-label="Close"
+      ></button>
     </div>
+  </div>
 </div>
 
 @section Scripts {
-    <script>
-    var $submitButton = $('#submitButton');
+<script>
+  var $submitButton = $("#submitButton");
 
-    function renderResultList(response) {
-        let html= [];
-        html.push(`
+  function renderResultList(response) {
+    let html = [];
+    html.push(`
         <table class="tblResult">
         `);
-        
-        let $resultCount = $('.finding-count');
-        if(!response || response.length == 0){
-            html.push(`<tr><td colspan="3" class="text-center">No records to display</td></tr>`)
-            $resultCount.hide();
 
-        } else {
-            $resultCount.show().text(`Total finding: ${response.length}`)
-            response.sort((a, b) => a.line - b.line).forEach(elem => {
-                var link = $(`<a href="#" class="issue-link" data-line="${elem.line}">`)
-                    .text("Line " + elem.line + ": " + elem.message)
-                    .click(function (e) {
-                        let line = $(this).data('line')
-                        jumpToLine(line);
-                    });
-                html.push(`
-                <tr class="type-${parseInt(elem.errorType)}">
-                    <td><a href="#" class="jump-line" data-line="${elem.line}">${elem.line}</a>.</td>
-                    <td>${elem.message} <a href="${elem.helpURL}" class="more-info" data-line="${elem.line}" target="_blank">more info</a></td>
-                </tr>`)
+    let $resultCount = $(".finding-count");
+    if (!response || response.length == 0) {
+      html.push(
+        `<tr><td colspan="3" class="text-center">No records to display</td></tr>`
+      );
+      $resultCount.hide();
+    } else {
+      $resultCount.show().text(`Total finding: ${response.length}`);
+      response
+        .sort((a, b) => a.line - b.line)
+        .forEach((elem) => {
+          var link = $(
+            `<a href="#" class="issue-link" data-line="${elem.line}">`
+          )
+            .text("Line " + elem.line + ": " + elem.message)
+            .click(function (e) {
+              let line = $(this).data("line");
+              jumpToLine(line);
             });
-        }
-
-        $('.div-output').html(html.join(''));
-
-        $('.jump-line').on('click', function(){
-            let line = $(this).data('line');
-            jumpToLine(line);
+          html.push(`
+                <tr class="type-${parseInt(elem.errorType)}">
+                    <td><a href="#" class="jump-line" data-line="${
+                      elem.line
+                    }">${elem.line}</a>.</td>
+                    <td>${elem.message} <a href="${
+            elem.helpURL
+          }" class="more-info" data-line="${
+            elem.line
+          }" target="_blank">more info</a></td>
+                </tr>`);
         });
     }
-            
-    function jumpToLine(lineNumber) {
-        var doc = inputEditor.getDoc();
-        doc.setCursor({ line: lineNumber - 1, ch: 0 });
-        inputEditor.scrollIntoView({ line: lineNumber - 1, ch: 0 }, 200);
-        var lineContent = doc.getLine(lineNumber - 1);
-        doc.setSelection(
-            { line: lineNumber - 1, ch: 0 },
-            { line: lineNumber - 1, ch: lineContent.length }
+
+    $(".div-output").html(html.join(""));
+
+    $(".jump-line").on("click", function () {
+      let line = $(this).data("line");
+      jumpToLine(line);
+    });
+  }
+
+  function jumpToLine(lineNumber) {
+    var doc = inputEditor.getDoc();
+    doc.setCursor({ line: lineNumber - 1, ch: 0 });
+    inputEditor.scrollIntoView({ line: lineNumber - 1, ch: 0 }, 200);
+    var lineContent = doc.getLine(lineNumber - 1);
+    doc.setSelection(
+      { line: lineNumber - 1, ch: 0 },
+      { line: lineNumber - 1, ch: lineContent.length }
+    );
+    inputEditor.focus();
+  }
+  // CodeMirror Input
+  var inputEditor = CodeMirror.fromTextArea(
+    document.getElementById("codeInput"),
+    {
+      mode: "text/x-csharp",
+      //theme: "monokai",
+      lineNumbers: true,
+      tabSize: 4,
+      indentWithTabs: false,
+      matchBrackets: true,
+    }
+  );
+
+  renderResultList([]);
+
+  function showToast(message) {
+    var toast = new bootstrap.Toast(document.getElementById("myToast"));
+    $("#myToast .toast-body").text(message);
+    toast.show();
+  }
+
+  $("#copyButton").on("click", function () {
+    var content = inputEditor.getValue();
+    navigator.clipboard.writeText(content).then(
+      function () {
+        showToast("Copied to clipboard!");
+      },
+      function (err) {
+        showToast("Copy failed: " + err);
+      }
+    );
+  });
+
+  $("#pasteButton").on("click", function () {
+    navigator.clipboard.readText().then(
+      function (text) {
+        inputEditor.setValue(text);
+        showToast("Text loaded from clipboard!");
+      },
+      function (err) {
+        showToast("Paste failed: " + err);
+      }
+    );
+  });
+
+  $submitButton.on("click", function (e) {
+    e.preventDefault();
+
+    $(".div-output").html("");
+
+    var code = inputEditor.getValue();
+    $submitButton.prop("disabled", true).val("Reviewing...");
+
+    let startTime = new Date();
+
+    $.ajax({
+      url: "/home/reviewCode",
+      type: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({ code: code }),
+      success: function (response) {
+        console.log(response);
+        renderResultList(response);
+
+        const endTime = Date.now();
+
+        const timeTaken = endTime - startTime;
+
+        $('.time-taken').text(`Completed in ${timeTaken/1000} seconds`)
+      },
+      error: function (xhr, status, error) {
+        console.error("Error:", error);
+        $(".div-output").html(
+          '<div class="alert alert-danger">Something went wrong!</div>'
         );
-        inputEditor.focus();
-    }
-    // CodeMirror Input
-    var inputEditor = CodeMirror.fromTextArea(document.getElementById("codeInput"), {
-        mode: "text/x-csharp",
-        //theme: "monokai",
-        lineNumbers: true,
-        tabSize: 4,
-        indentWithTabs: false,
-        matchBrackets: true
+      },
+      complete: function () {
+        $submitButton.prop("disabled", false).val("Review Code");
+      },
     });
-
-    renderResultList([])
-
-    function showToast(message){
-        var toast = new bootstrap.Toast(document.getElementById('myToast'));
-        $('#myToast .toast-body').text(message);
-        toast.show();
-    }
-
-    $('#copyButton').on('click', function(){
-        var content = inputEditor.getValue();
-        navigator.clipboard.writeText(content).then(function () {
-            showToast('Copied to clipboard!');
-        }, function (err) {
-            showToast('Copy failed: ' + err);
-        });
-
-        
-    });
-
-    $('#pasteButton').on('click', function(){
-        navigator.clipboard.readText().then(function (text) {
-            inputEditor.setValue(text);
-            showToast('Text loaded from clipboard!')
-        }, function (err) {
-            showToast('Paste failed: ' + err);
-        });
-    })
-
-    $submitButton.on("click", function (e) {
-        e.preventDefault();
-
-        $('.div-output').html('');
-        
-        var code = inputEditor.getValue();
-        $submitButton.prop('disabled', true).val('Reviewing...')
-
-        $.ajax({
-            url: '/home/reviewCode',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ code: code }),
-            success: function (response) {
-                console.log(response)
-                renderResultList(response);
-            },
-            error: function (xhr, status, error) {
-                console.error("Error:", error);
-                $(".div-output").html('<div class="alert alert-danger">Something went wrong!</div>');
-            },
-            complete: function(){
-                $submitButton.prop('disabled', false).val('Review Code');
-            }
-        });
-    });
-    </script>
+  });
+</script>
 }
