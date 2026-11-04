@@ -2,6 +2,10 @@
 
 A web-based C# code review tool built with ASP.NET Core MVC and Roslyn. It analyses submitted C# source code against a collection of predefined coding and best-practice rules, then displays findings with line references to help developers identify potential issues.
 
+## Application Screenshot
+
+![Code Review Tool - Analysis Results](screenshots/code-review-results.png)
+
 ## Overview
 
 This project explores how Roslyn, the .NET compiler platform, can be used to inspect C# source code programmatically and perform static code analysis.
@@ -40,7 +44,7 @@ The application currently implements the following checks:
 
 ## Technology Stack
 
-- **Backend:** C#, ASP.NET Core MVC (.NET 9)
+- **Backend:** C#, ASP.NET Core MVC (.NET 10)
 - **Code Analysis:** Microsoft.CodeAnalysis.CSharp (Roslyn)
 - **Frontend:** Razor Views, HTML5, CSS3, JavaScript, jQuery, Bootstrap
 - **Code Editor:** CodeMirror 5
@@ -62,7 +66,7 @@ The application follows an ASP.NET Core MVC architecture.
 
 ### Prerequisites
 
-- .NET 9 SDK
+- .NET 10 SDK
 - Visual Studio 2022 or Visual Studio Code
 - A modern web browser
 - Internet connection for loading CodeMirror assets from CDN
